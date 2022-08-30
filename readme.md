@@ -29,7 +29,7 @@ func main() {
 	const customTaskId = "taskId"
 	//time in format HH:MM, if put time not in this format 
 	//executor will return timeParseError
-	taskWithoutDuration, err := taskManager.Add(ctx, customTaskId, exampleFunc, "14:00", "argument 1", 2, "argument 3")
+	taskWithoutDuration, err := taskManager.Add(ctx, customTaskId, exampleFunc, "14:00","first argument for func", 2, "second argument for func")
 	if err != nil {
 		log.Fatalf(`add task with string time error: %s`, err.Error())
 	}
@@ -37,7 +37,7 @@ func main() {
 
 	
 	
-	_, err = taskManager.AddWithDuration(ctx, customTaskId+"2", exampleFunc, time.Second*4, "argument 1", 2, "argument 3")
+	_, err = taskManager.AddWithDuration(ctx, customTaskId+"2", exampleFunc, time.Second*4, "first argument for func", 2, "second argument for func")
 	if err != nil {
 		log.Fatalf(`add task with duration error: %s`, err.Error())
 	}
