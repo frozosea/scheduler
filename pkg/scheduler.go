@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"time"
 )
 
@@ -32,11 +31,6 @@ type Manager struct {
 	baseLogger *log.Logger
 }
 
-func (m *Manager) Start() {
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Interrupt)
-	<-quit
-}
 func (m *Manager) Add(ctx context.Context, taskId string, task ITask, timeStr string, taskArgs ...interface{}) (*Job, error) {
 	taskTime, err := m.timeParser.Parse(timeStr)
 	if err != nil {

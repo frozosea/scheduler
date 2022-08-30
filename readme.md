@@ -2,7 +2,7 @@
 
 Scheduler is simple lib for golang for scheduled tasks.
 
-Example of usage
+Demonstration of functionality
 
 ```go
 package main
