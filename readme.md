@@ -61,7 +61,7 @@ func main() {
 
 	
 	
-	err = taskManager.Modify(ctx, customTaskId, exampleFunc, "new first arg", "new secont args")
+	err = taskManager.Modify(ctx, customTaskId, exampleFunc, "new first arg", "new second args")
 	if err != nil {
 		log.Fatalf(`modify task error: %s`, err.Error())
 	}
