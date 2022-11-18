@@ -18,7 +18,8 @@ import (
 func main() {
 	taskManager := scheduler.NewDefault()
 	ctx := context.Background()
-
+	
+	//ShouldBeCancelled is boolean flag,it shows should cancel task or not, if func return true will automatically remove task, else continue start task in your time
 	exampleFunc := func(ctx context.Context, exampleArgsSequence ...interface{}) scheduler.ShouldBeCancelled {
 		for _, arg := range exampleArgsSequence {
 			fmt.Println(arg)
