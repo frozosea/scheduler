@@ -2,7 +2,7 @@
 
 Scheduler is simple lib for golang for scheduled tasks.
 
-Demonstration of functionality
+Example of usage
 
 ```go
 package main
@@ -19,7 +19,8 @@ func main() {
 	taskManager := scheduler.NewDefault()
 	ctx := context.Background()
 	
-	//ShouldBeCancelled is boolean flag,it shows should cancel task or not, if func return true will automatically remove task, else continue start task in your time
+	//ShouldBeCancelled is boolean flag,it shows should cancel task or not, if func return true will automatically remove task, 
+	//else continue start task in your time
 	exampleFunc := func(ctx context.Context, exampleArgsSequence ...interface{}) scheduler.ShouldBeCancelled {
 		for _, arg := range exampleArgsSequence {
 			fmt.Println(arg)
