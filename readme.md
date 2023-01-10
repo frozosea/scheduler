@@ -19,19 +19,15 @@ func main() {
 	taskManager := scheduler.NewDefault()
 	ctx := context.Background()
 	
-	//ShouldBeCancelled is boolean flag,it shows should cancel task or not, if func return true will automatically remove task, 
-	//else continue start task in your time
-	exampleFunc := func(ctx context.Context, exampleArgsSequence ...interface{}) scheduler.ShouldBeCancelled {
-		for _, arg := range exampleArgsSequence {
-			fmt.Println(arg)
-		}
-		return false
+	
+	exampleFunc := func(ctx context.Context)  {
+		fmt.Println("Hello from scheduled task!")
 	}
 	
 	const customTaskId = "taskId"
 	//time in format HH:MM, if put time not in this format 
 	//executor will return timeParseError
-	taskWithoutDuration, err := taskManager.Add(ctx, customTaskId, exampleFunc, "14:00","first argument for func", 2, "second argument for func")
+	taskWithoutDuration, err := taskManager.Add(ctx, customTaskId, exampleFunc)
 	if err != nil {
 		log.Fatalf(`add task with string time error: %s`, err.Error())
 	}
@@ -39,7 +35,7 @@ func main() {
 
 	
 	
-	_, err = taskManager.AddWithDuration(ctx, customTaskId+"2", exampleFunc, time.Second*4, "first argument for func", 2, "second argument for func")
+	_, err = taskManager.AddWithDuration(ctx, customTaskId+"2", exampleFunc, time.Second*4)
 	if err != nil {
 		log.Fatalf(`add task with duration error: %s`, err.Error())
 	}
@@ -63,7 +59,7 @@ func main() {
 
 	
 	
-	err = taskManager.Modify(ctx, customTaskId, exampleFunc, "new first arg", "new second args")
+	err = taskManager.Modify(ctx, customTaskId, exampleFunc)
 	if err != nil {
 		log.Fatalf(`modify task error: %s`, err.Error())
 	}

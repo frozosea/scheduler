@@ -1,4 +1,4 @@
-package scheduler
+package pkg
 
 import (
 	"context"
@@ -9,13 +9,12 @@ import (
 )
 
 type ShouldBeCancelled bool
-type ITask func(ctx context.Context, args ...interface{}) ShouldBeCancelled
+type ITask func(ctx context.Context)
 
 type Job struct {
 	Id          string
 	Fn          ITask
 	NextRunTime time.Time
-	Args        []interface{}
 	Interval    time.Duration
 	Time        string
 	Ctx         context.Context
@@ -28,15 +27,15 @@ type Manager struct {
 	executor   IJobExecutor
 	jobstore   IJobStore
 	timeParser ITimeParser
-	baseLogger *log.Logger
+	baseLogger log.Logger
 }
 
-func (m *Manager) Add(ctx context.Context, taskId string, task ITask, timeStr string, taskArgs ...interface{}) (*Job, error) {
+func (m *Manager) Add(ctx context.Context, taskId string, task ITask, timeStr string) (*Job, error) {
 	taskTime, err := m.timeParser.Parse(timeStr)
 	if err != nil {
 		return &Job{}, err
 	}
-	job, err := m.jobstore.Save(ctx, taskId, task, taskTime, taskArgs, timeStr)
+	job, err := m.jobstore.Save(ctx, taskId, task, taskTime, timeStr)
 	if err != nil {
 		m.baseLogger.Println(fmt.Sprintf(`add task with id: %s err: %s`, taskId, err.Error()))
 		return &Job{}, err
@@ -45,8 +44,8 @@ func (m *Manager) Add(ctx context.Context, taskId string, task ITask, timeStr st
 	go m.executor.Run(job)
 	return job, nil
 }
-func (m *Manager) AddWithDuration(ctx context.Context, taskId string, task ITask, interval time.Duration, taskArgs ...interface{}) (*Job, error) {
-	job, err := m.jobstore.Save(ctx, taskId, task, interval, taskArgs, fmt.Sprintf(`%d:%d`, time.Now().Add(interval).Hour(), time.Now().Add(interval).Minute()))
+func (m *Manager) AddWithDuration(ctx context.Context, taskId string, task ITask, interval time.Duration) (*Job, error) {
+	job, err := m.jobstore.Save(ctx, taskId, task, interval, fmt.Sprintf(`%d:%d`, time.Now().Add(interval).Hour(), time.Now().Add(interval).Minute()))
 	if err != nil {
 		m.baseLogger.Println(fmt.Sprintf(`add task with id: %s err: %s`, taskId, err.Error()))
 		return job, err
@@ -102,31 +101,21 @@ func (m *Manager) Remove(ctx context.Context, taskId string) error {
 	return m.jobstore.Remove(ctx, taskId)
 }
 func (m *Manager) RemoveAll(ctx context.Context) error {
-	allJobs, err := m.jobstore.GetAll(ctx)
-	if err != nil {
-		return err
-	}
-	for _, job := range allJobs {
-		if err := m.executor.Remove(job.Id); err != nil {
-			return err
-		}
-	}
 	return m.jobstore.RemoveAll(ctx)
 }
-func (m *Manager) Modify(ctx context.Context, taskId string, task ITask, args ...interface{}) error {
+func (m *Manager) Modify(ctx context.Context, taskId string, task ITask) error {
 	job, err := m.jobstore.Get(ctx, taskId)
 	if err != nil {
 		return err
 	}
 	job.Fn = task
-	job.Args = args
 	if err := m.jobstore.Remove(ctx, taskId); err != nil {
 		return err
 	}
 	if err := m.executor.Remove(taskId); err != nil {
 		return err
 	}
-	newJob, err := m.jobstore.Save(job.Ctx, job.Id, job.Fn, job.Interval, job.Args, job.Time)
+	newJob, err := m.jobstore.Save(job.Ctx, job.Id, job.Fn, job.Interval, job.Time)
 	if err != nil {
 		return err
 	}
@@ -135,12 +124,7 @@ func (m *Manager) Modify(ctx context.Context, taskId string, task ITask, args ..
 	return nil
 }
 
-func NewDefault() *Manager {
+func NewDefault(timezone string) *Manager {
 	jobStore := NewMemoryJobStore()
-	return &Manager{executor: NewExecutor(jobStore, NewTimeParser(), log.New(os.Stdout, "log", 1)), jobstore: jobStore, baseLogger: log.New(os.Stdout, "log", 1), timeParser: NewTimeParser()}
-}
-func NewWithLogger(log *log.Logger) *Manager {
-	jobStore := NewMemoryJobStore()
-	return &Manager{executor: NewExecutor(jobStore, NewTimeParser(), log), jobstore: jobStore, baseLogger: log, timeParser: NewTimeParser()}
-
+	return &Manager{executor: NewExecutor(jobStore, NewTimeParser(timezone), log.New(os.Stdout, "log", 1)), jobstore: jobStore, baseLogger: *log.New(os.Stdout, "log", 1), timeParser: NewTimeParser(timezone)}
 }

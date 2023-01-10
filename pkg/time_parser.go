@@ -1,4 +1,4 @@
-package scheduler
+package pkg
 
 import (
 	"fmt"
@@ -18,7 +18,13 @@ type ITimeParser interface {
 	Parse(s string) (time.Duration, error)
 }
 
-type TimeParser struct{}
+type TimeParser struct {
+	timezone string
+}
+
+func NewTimeParser(timezone string) *TimeParser {
+	return &TimeParser{timezone: timezone}
+}
 
 func (t *TimeParser) validate(s string) error {
 	match, err := regexp.MatchString(`\d{1,2}:\d{2}`, s)
@@ -53,7 +59,7 @@ func (t *TimeParser) getMinutesToTick(strMinutes string) (time.Duration, error) 
 	return (time.Minute * time.Duration(minutes)) - (time.Duration(time.Now().Minute()) * time.Minute), nil
 }
 
-func (t *TimeParser) Parse(s string) (time.Duration, error) {
+func (t TimeParser) Parse(s string) (time.Duration, error) {
 	if validateErr := t.validate(s); validateErr != nil {
 		return time.Second, validateErr
 	}
@@ -74,10 +80,10 @@ func (t *TimeParser) Parse(s string) (time.Duration, error) {
 	} else {
 		day = now.Day() + 1
 	}
-	date := time.Date(now.Year(), now.Month(), day, hour, minute, 0, 0, time.Local)
+	tz, err := time.LoadLocation(t.timezone)
+	if err != nil {
+		tz = time.Local
+	}
+	date := time.Date(now.Year(), now.Month(), day, hour, minute, 0, 0, tz)
 	return date.Sub(now), nil
-}
-
-func NewTimeParser() ITimeParser {
-	return &TimeParser{}
 }
